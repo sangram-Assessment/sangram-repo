@@ -1,0 +1,116 @@
+Probalme 2
+
+Automated Backup Solution:
+ 
+create vim   backup_script.sh 
+
+
+#!/bin/bash
+
+# Specify the source directory to be backed up
+SOURCE_DIR="/homee/sangram/backupfile"
+
+# Specify the name of your AWS S3 bucket
+S3_BUCKET="sangram-97-s3bucket-1"
+
+# Specify the AWS profile to use (optional, if you have multiple profiles)
+AWS_PROFILE="your-aws-profile"
+
+# Specify the name of the backup file
+BACKUP_FILE="backup_$(date +"%Y%m%d_%H%M%S").tar.gz"
+
+# Redirect stdout and stderr to a log file
+LOG_FILE="backup_log_$(date +"%Y%m%d_%H%M%S").txt"
+exec > >(tee -a $LOG_FILE) 2>&1
+
+# Check if the source directory exists
+if [ ! -d "$SOURCE_DIR" ]; then
+  echo "Error: Source directory does not exist."
+  exit 1
+fi
+
+# Archive the source directory
+echo "Creating backup archive..."
+tar -czf $BACKUP_FILE -C $(dirname "$SOURCE_DIR") $(basename "$SOURCE_DIR")
+
+# Check if the backup archive was created successfully
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to create backup archive."
+  exit 1
+fi
+
+# Upload the backup archive to S3
+echo "Uploading backup archive to S3..."
+aws s3 cp $BACKUP_FILE s3://$S3_BUCKET/ --profile $AWS_PROFILE
+
+# Check if the upload was successful
+if [ $? -eq 0 ]; then
+  echo "Backup operation completed successfully."
+  exit 0
+else
+  echo "Error: Failed to upload backup archive to S3."
+  exit 1
+fi 
+
+
+for giving permition 
+
+$chmod +x backup_script.sh
+
+for running the script
+
+./backup_script.sh
+
+------------------------------------------------------------------------
+
+System Health Monitoring Script: 
+
+for creating file 
+vim monitoring_script.sh
+
+# Set your predefined thresholds
+CPU_THRESHOLD=80
+MEMORY_THRESHOLD=80
+DISK_THRESHOLD=80
+
+# Function to log messages
+log() {
+    echo "$(date) - $1" >> monitoring.log
+}
+
+# Check CPU usage
+CPU_USAGE=$(top -b -n 1 | awk '/^%Cpu/ {print $2}' | cut -d. -f1)
+if [ "$CPU_USAGE" -gt "$CPU_THRESHOLD" ]; then
+    log "High CPU usage detected: $CPU_USAGE%"
+fi
+
+# Check memory usage
+MEMORY_USAGE=$(free | awk '/Mem/ {printf("%.2f", $3/$2 * 100)}')
+if [ "$(echo "$MEMORY_USAGE > $MEMORY_THRESHOLD" | bc -l)" -eq 1 ]; then
+    log "High memory usage detected: $MEMORY_USAGE%"
+fi
+
+# Check disk space
+DISK_USAGE=$(df -h / | awk '/\// {print $5}' | cut -d% -f1)
+if [ "$DISK_USAGE" -gt "$DISK_THRESHOLD" ]; then
+    log "High disk usage detected: $DISK_USAGE%"
+fi
+
+# Check running processes
+PROCESS_COUNT=$(ps aux | wc -l)
+if [ "$PROCESS_COUNT" -gt 100 ]; then
+    log "High number of running processes detected: $PROCESS_COUNT"
+fi
+
+# Check if any alerts were logged, and display them
+if [ -e monitoring.log ]; then
+    echo "Alerts:"
+    cat monitoring.log
+fi
+
+
+chmod +x monitoring_script.sh
+
+for cron job
+
+You can then run the script periodically using a cron job. For example, to run it every 5 minutes:                                         */5 * * * * /path/to/monitoring_script.sh
