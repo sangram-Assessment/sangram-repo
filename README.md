@@ -1,1 +1,1 @@
-# sangram-repo
+I chose Jenkins as my CI/CD tool for building an image. To facilitate continuous deployment, I integrated ArgoCD, included a manifest file in the repository, and configured a webhook to automatically pull updated images, creating a pod in Amazon EKS.
